@@ -68,21 +68,32 @@ int main(int argc, char **argv)
 
   // CB measured values while playing audio (control is 0 when not playing)
   // PWMCLK_CNTL: 148 = 10010100 (SRC=PLLA,ENAB,BUSY,MASH=0) 
-  // PWMCLK_DIV: 16384 = 100.000000000000 = 4 (I think)
+  // PWMCLK_DIV: 0x4000 = 100.000000000000 = 4 (I think)
   // PWM_CONTROL: 8481 = 10000100100001 (enable and use fifo for both channels)
   // PWM0_RANGE: 2048
   // PWM1_RANGE: 2048
 
-  // page 105 of peripherals datasheet implies:
+  // Internet hearsay, derived from page 105 of peripherals datasheet:
   // PLLA = 650 MHz
   // PLLB = 400 MHz
   // PLLC = 200 MHz
   // PLLD = 500 MHz
+  // Switching to PLLD and using vcgencmd to measure clock gives 125MHz, which is 500MHz/4, so PLLD is correctly listed
+  // But, with PLLA enabled, as default, the clock is measured at 98304000, which would imply PLLA = that*4 = 393.216MHz, not what people seem to be saying, but perfect for audio playback. Therefore, the firmware sets the PLLA freq.
+  // Using PLLC,  the measured clock is 0, and no audio is heard. I also get a click when changing to this mode. PLLC seems to not work with PWM, which fits with what some people are saying about PLLD being the only working clock for this.
+  // Finally, using OSC gives 4800000, implying a clock of this*4 = 19.2MHz, which matches the schematics
 
   // 2048 gives a resolution of 11 bits
   // 2048 pulses are generated at a rate of 650MHz / 4 / 2048 = 79KHz
   // This is about double the audio sample rate, which is odd.
   // I don't think this has anything to do with stereo - each audio channel uses its own PWM channel.
+
+// This does not hold
+//  *(clk+PWMCLK_DIV) = 0x8000;
+// This can be modified, but the audio driver seems to compensate for any change
+//  *(pwm+PWM1_RANGE) = 2048;
+// Use PLLD, to see what happens
+//  *(clk+PWMCLK_CNTL) = 0x5a000096;
 
   PRINT(clk,PWMCLK_CNTL);
   PRINT(clk,PWMCLK_DIV);
