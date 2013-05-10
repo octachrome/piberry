@@ -1,4 +1,6 @@
+# -mfpu=vfp is required, otherwise the compiler will generate illegal instructions, such as vmov.f32
 COPTS = -marm -mcpu=arm1176jzf-s -mfpu=vfp -Wall -Werror -O2 -nostartfiles -ffreestanding
+# -mfpu=vfp is required to make the assembler accept the fpexc instruction as legal
 AOPTS = -mcpu=arm1176jzf-s -mfpu=vfp
 OBJS = start.o wave.o sampletable.o
 
