@@ -1,8 +1,8 @@
 .text
 
-.global _start
+.global bare_start
 
-_start:
+bare_start:
 	ldr		sp, =stack
 
 	@; enable single & double precision vfp

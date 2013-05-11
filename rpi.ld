@@ -9,3 +9,5 @@ SECTIONS
 	.bss : { *(.bss*) } > ram
 	.data : { *(.data*) } > ram
 }
+
+ENTRY(bare_start)
