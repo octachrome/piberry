@@ -72,7 +72,8 @@ void blink() {
 	// GPIO16 as output
 	GPFSEL1 = (GPFSEL1 & ~(7 << 18)) | (1 << 18);
 
-	while (1) {
+	int i = 3;
+	while (i-- > 0) {
 		GPSET0 = 1 << 16;
 		delay();
 		GPCLR0 = 1 << 16;
@@ -87,14 +88,16 @@ void configure_pwm_clock() {
 	PWMCLK_CNTL = 0x5a000000 | (PWMCLK_CNTL & ~(1 << 7));
 	// wait for busy flag to clear  - this line hangs on Linux if audio has already been played
 	while (PWMCLK_CNTL & (1 << 7));
-	// divide clock by 4
-	PWMCLK_DIV = 0x5a004000;
+	// divide clock by 5.08626302083 to get to 2048*48KHz
+	PWMCLK_DIV = 0x5a005058;
 	// use PLLA @ 393.216MHz
-	PWMCLK_CNTL = 0x5a000004;
+	PWMCLK_CNTL = 0x5a000006;
 	// enable clock (bit 4)
-	PWMCLK_CNTL = 0x5a000014;
+	PWMCLK_CNTL = 0x5a000016;
 	// wait for busy flag to set - this line hangs on both Linux and bare system
 	while (!(PWMCLK_CNTL & (1 << 7)));
+
+	blink();
 }
 
 void configure_pwm() {
@@ -180,5 +183,5 @@ int main() {
 void notmain() {
 	sampleTable = heap;
 	common();
-	blink();
+	while (1) blink();
 }
