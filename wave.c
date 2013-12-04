@@ -85,8 +85,8 @@ void configure_pwm_clock() {
 	// disable pwm
 	PWM_CONTROL = 0;
 	// disable clock
-	PWMCLK_CNTL = 0x5a000000 | (PWMCLK_CNTL & ~(1 << 7));
-	// wait for busy flag to clear  - this line hangs on Linux if audio has already been played
+	PWMCLK_CNTL = 0x5a000000 | (PWMCLK_CNTL & ~(1 << 4));
+	// wait for busy flag to clear
 	while (PWMCLK_CNTL & (1 << 7));
 	// divide clock by 5.08626302083 to get to 2048*48KHz
 	PWMCLK_DIV = 0x5a005058;
@@ -94,7 +94,7 @@ void configure_pwm_clock() {
 	PWMCLK_CNTL = 0x5a000006;
 	// enable clock (bit 4)
 	PWMCLK_CNTL = 0x5a000016;
-	// wait for busy flag to set - this line hangs on both Linux and bare system
+	// wait for busy flag to set
 	while (!(PWMCLK_CNTL & (1 << 7)));
 
 	blink();
