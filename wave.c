@@ -58,6 +58,7 @@ void generate_waveform(int freq, float amp, int secs, int sampleRate) {
 		} else {
 			sampleTable[i] = amp * (3 - progress * 4);
 		}
+		amp *= 0.9999;
 	}
 }
 
@@ -121,14 +122,31 @@ void writeSample(float sample) {
 	PWM_FIFO = data;
 }
 
+volatile int trigger;
+
 void play() {
-	int i;
-	for (i = 0; i < sampleCount; i++) {
-		// channel 0
-		writeSample(sampleTable[i]);
-		// channel 1
-		writeSample(sampleTable[i]);
+	int i = 0;
+	while (1) {
+		if (trigger) {
+			trigger = 0;
+			i = 0;
+		}
+
+		if (i < sampleCount) {
+			// channel 0
+			writeSample(sampleTable[i]);
+			// channel 1
+			writeSample(sampleTable[i]);
+			i++;
+		}
 	}
+}
+
+
+void irq_handler() __attribute__((interrupt("IRQ")));
+
+void irq_handler() {
+	trigger = 1;
 }
 
 #ifdef LINUX
@@ -161,11 +179,8 @@ void common() {
 	generate_waveform(440, 0.8, 1, 48000);
 	configure_pwm_clock();
 	configure_pwm();
+	trigger = 1;
 	play();
-	int i;
-	for (i = 0; i < sampleCount; i++) {
-		//printf("%f\n", sampleTable[i]);
-	}
 }
 
 #ifdef LINUX
@@ -180,8 +195,18 @@ int main() {
 }
 #endif
 
+void install_except_handler(int index, void* handler) {
+	unsigned int* base = (unsigned int*) 0;
+	base[index] = 0xea000000 | ((((unsigned int) handler) - (8 + 4 * index)) >> 2);
+}
+
+extern void undef_instr_handler(void);
+
 void notmain() {
 	sampleTable = heap;
+	install_except_handler(1, undef_instr_handler);
+	install_except_handler(6, irq_handler);
+
 	common();
 	while (1) blink();
 }
