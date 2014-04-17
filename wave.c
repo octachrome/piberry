@@ -20,10 +20,23 @@ static volatile void *peripheral_base;
 #define ACCESS_PERI(offset) *((unsigned int volatile*)(PERIPHERAL_BASE + offset))
 #define WORDSIZE	4
 
+#define GPFSEL0		ACCESS_PERI(0x200000)
 #define GPFSEL1		ACCESS_PERI(0x200004)
+#define GPFSEL3		ACCESS_PERI(0x20000C)
 #define GPFSEL4		ACCESS_PERI(0x200010)
 #define GPSET0		ACCESS_PERI(0x20001C)
 #define GPCLR0		ACCESS_PERI(0x200028)
+#define GPLEV0		ACCESS_PERI(0x200034)
+#define GPEDS0		ACCESS_PERI(0x200040)
+#define GPREN0		ACCESS_PERI(0x20004C)
+#define GPFEN0		ACCESS_PERI(0x200058)
+#define GPHEN0		ACCESS_PERI(0x200064)
+#define GPLEN0		ACCESS_PERI(0x200070)
+#define GPLEN1		ACCESS_PERI(0x200074)
+#define GPAREN0		ACCESS_PERI(0x20007C)
+#define GPAFEN0		ACCESS_PERI(0x200088)
+#define GPPUD		ACCESS_PERI(0x200094)
+#define GPPUDCLK0	ACCESS_PERI(0x200098)
 
 #define PWM_CONTROL ACCESS_PERI(0x20C000)
 #define PWM_STATUS  ACCESS_PERI(0x20C004)
@@ -35,6 +48,11 @@ static volatile void *peripheral_base;
 
 #define PWMCLK_CNTL ACCESS_PERI(0x1010A0)
 #define PWMCLK_DIV  ACCESS_PERI(0x1010A4)
+
+#define INTEN1		ACCESS_PERI(0x00B210)
+// In the manual this register is called "interrupt enable register 2"
+#define INTEN2		ACCESS_PERI(0x00B214)
+#define INTEN_BASIC	ACCESS_PERI(0x00B218)
 
 #define PULSES_PER_SAMPLE	2048
 
@@ -69,6 +87,13 @@ void delay() {
 	}
 }
 
+void delay_short() {
+	int i;
+	for (i = 0; i < 150; i++) {
+		dummy(i);
+	}
+}
+
 void blink() {
 	// GPIO16 as output
 	GPFSEL1 = (GPFSEL1 & ~(7 << 18)) | (1 << 18);
@@ -97,8 +122,6 @@ void configure_pwm_clock() {
 	PWMCLK_CNTL = 0x5a000016;
 	// wait for busy flag to set
 	while (!(PWMCLK_CNTL & (1 << 7)));
-
-	blink();
 }
 
 void configure_pwm() {
@@ -106,7 +129,6 @@ void configure_pwm() {
 	GPFSEL4 = (GPFSEL4 & ~(7)) | 4;
 	// map gpio45 to pwm1 out (4 = alt function 0)
 	GPFSEL4 = (GPFSEL4 & ~(7 << 15)) | (4 << 15);
-
 	PWM0_RANGE = PULSES_PER_SAMPLE;
 	PWM1_RANGE = PULSES_PER_SAMPLE;
 
@@ -143,11 +165,33 @@ void play() {
 }
 
 
-void irq_handler() __attribute__((interrupt("IRQ")));
-
+__attribute__((interrupt("IRQ")))
 void irq_handler() {
-	trigger = 1;
+ 	trigger = 1;
+
+	// Clear interrupt status (yes, by writing 1s to it)
+	GPEDS0 = 0xffffffff;
 }
+
+void configure_gpio_irq() {
+	// GPIO17 as input
+	GPFSEL1 = GPFSEL1 & ~(7 << 21);
+
+	// Pull-up on GPIO17
+	GPPUD = 2;
+	delay_short();
+	GPPUDCLK0 = (1 << 17);
+	delay_short();
+	GPPUD = 0;
+	GPPUDCLK0 = 0;
+
+	// IRQ when GPIO17 is pulled low
+	GPFEN0 = GPFEN0 | (1 << 17);
+
+	// Enable IRQ49 = gpio_irq[0] = interrupts from GPIO pins 0-31
+	INTEN2 = 1 << (49 - 32);
+}
+
 
 #ifdef LINUX
 volatile void *map_memory(unsigned int base, unsigned int size)
@@ -196,17 +240,15 @@ int main() {
 #endif
 
 void install_except_handler(int index, void* handler) {
-	unsigned int* base = (unsigned int*) 0;
-	base[index] = 0xea000000 | ((((unsigned int) handler) - (8 + 4 * index)) >> 2);
+	// The vectors start after the 8 ldr instructions
+	unsigned int* base = (unsigned int*) (8 * 4);
+	base[index] = (unsigned int) handler;
 }
-
-extern void undef_instr_handler(void);
 
 void notmain() {
 	sampleTable = heap;
-	install_except_handler(1, undef_instr_handler);
 	install_except_handler(6, irq_handler);
+	configure_gpio_irq();
 
 	common();
-	while (1) blink();
 }

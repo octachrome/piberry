@@ -24,3 +24,8 @@ wave.linux.elf : $(OBJS)
 
 %.bin : %.elf
 	$(ARMGNU)-objcopy -O binary $< $@
+
+install : wave.bin
+	cp wave.bin /media/chris/C522-EA52/kernel.img
+	sync
+	-eject /media/chris/C522-EA52
