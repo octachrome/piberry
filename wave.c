@@ -116,7 +116,7 @@ void configure_pwm_clock() {
 	while (PWMCLK_CNTL & (1 << 7));
 	// divide clock by 5.08626302083 to get to 2048*48KHz
 	PWMCLK_DIV = 0x5a005058;
-	// use PLLA @ 393.216MHz
+	// use PLLD @ 500MHz
 	PWMCLK_CNTL = 0x5a000006;
 	// enable clock (bit 4)
 	PWMCLK_CNTL = 0x5a000016;
