@@ -49,7 +49,7 @@ void audio_init()
         exit (1);
     }
 
-    int rate = SAMPLE_RATE;
+    int rate = FRAME_RATE;
     if ((err = snd_pcm_hw_params_set_rate_near (playback_handle, hw_params, &rate, 0)) < 0) {
         fprintf (stderr, "cannot set sample rate (%s)\n",
              snd_strerror (err));
@@ -77,10 +77,15 @@ void audio_init()
     }
 }
 
-void audio_queue(void* buf, int len)
+void audio_write(float* block)
 {
+    short buffer[BLOCK_SIZE];
+    int i;
+    for (i = 0; i < BLOCK_SIZE; i++) {
+        buffer[i] = (short) (block[i] * 32767);
+    }
     int err;
-    if ((err = snd_pcm_writei (playback_handle, buf, len)) != 128) {
+    if ((err = snd_pcm_writei (playback_handle, buffer, BLOCK_FRAMES)) != BLOCK_FRAMES) {
         fprintf (stderr, "write to audio interface failed (%s)\n",
              snd_strerror (err));
         exit (1);

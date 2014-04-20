@@ -29,3 +29,6 @@ install : wave.bin
 	cp wave.bin /media/chris/C522-EA52/kernel.img
 	sync
 	-eject /media/chris/C522-EA52
+
+alsa_test : alsa.c module.c sine.c
+	cc -o $@ -g $^ -lasound
