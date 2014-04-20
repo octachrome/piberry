@@ -32,9 +32,15 @@ void envelope_fillblock(mod_handle_t handle, float* block, void* d)
 	data->samplePos = samplePos;
 }
 
+void envelope_ontrigger(mod_handle_t handle, void* d)
+{
+	envelope_data_t* data = (envelope_data_t*) d;
+	data->samplePos = 0;
+}
+
 mod_handle_t envelope_create(float attack, float decay)
 {
-	mod_handle_t handle = mod_create(envelope_fillblock, 0, sizeof(envelope_data_t));
+	mod_handle_t handle = mod_create(envelope_fillblock, envelope_ontrigger, sizeof(envelope_data_t));
 
 	envelope_data_t* data = mod_data(handle);
 	data->attack = attack * FRAME_RATE;

@@ -18,14 +18,14 @@ static void create_table()
         float t2 = theta * theta;
         float t4 = t2 * t2;
         float t6 = t4 * t2;
-        float s = theta - t2 / 2 + t4 / FACT_4 - t6 / FACT_6;
+        float s = 1 - t2 / 2 + t4 / FACT_4 - t6 / FACT_6;
         table[i] = s;
         table[i + TABLE_LEN / 2] = -s;
     }
 
     for (i = 0; i < TABLE_LEN / 4; i++) {
-        table[TABLE_LEN / 2 - i - 1] = table[i];
-        table[TABLE_LEN - i - 1] = -table[i];
+        table[TABLE_LEN / 2 - i - 1] = -table[i];
+        table[TABLE_LEN - i - 1] = table[i];
     }
 
     table_ready = 1;
@@ -64,13 +64,19 @@ static void cos_fillblock(mod_handle_t handle, float* block, void* d)
     data->phase = phase;
 }
 
+static void cos_ontrigger(mod_handle_t handle, void* d)
+{
+    cos_data_t* data = (cos_data_t*) d;
+    data->phase = 0;
+}
+
 static mod_handle_t cos_create(float freq, mod_handle_t freq_in)
 {
     if (!table_ready) {
         create_table();
     }
 
-    mod_handle_t handle = mod_create(cos_fillblock, 0, sizeof(cos_data_t));
+    mod_handle_t handle = mod_create(cos_fillblock, cos_ontrigger, sizeof(cos_data_t));
 
     cos_data_t* data = (cos_data_t*) mod_data(handle);
 
@@ -101,15 +107,20 @@ mod_handle_t cos_create_vco(mod_handle_t freq_in)
 
 main()
 {
-    mod_handle_t env = envelope_create(0.0005, 0.14);
-    mod_handle_t expn = exp_create(env, 40, .8);
+    mod_handle_t env = envelope_create(0.0005, 0.18);
+    mod_handle_t expn = exp_create(env, 40, 1.6);
     mod_handle_t cosine = cos_create_vco(expn);
     mod_handle_t multiply = multiply_create(cosine, env);
 
     audio_init();
 
-    int i;
-    for (i = 0; i < BLOCKS_IN_ONE_SEC; i++) {
+    int i = 0;
+    while (1) {
+        if (i++ % BLOCKS_IN_ONE_SEC == 0) {
+            mod_trigger(env);
+            mod_trigger(cosine);
+        }
+
         mod_newblock();
         float* block = mod_rdblock(multiply);
         audio_write(block);

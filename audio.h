@@ -13,6 +13,7 @@ typedef void (*mod_ontrigger_t)(mod_handle_t handle, void* data);
 mod_handle_t mod_create(mod_fillblock_t fillblock, mod_ontrigger_t ontrigger, int bytes);
 void* mod_data(mod_handle_t handle);
 float* mod_rdblock(mod_handle_t handle);
+void mod_trigger(mod_handle_t handle);
 void mod_newblock();
 
 mod_handle_t cos_create_fixed(float freq);
