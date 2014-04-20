@@ -76,12 +76,14 @@ mod_handle_t cos_create(float freq)
 main()
 {
     mod_handle_t cosine = cos_create(FREQ);
+    mod_handle_t env = envelope_create(0.01, 0.8);
+    mod_handle_t multiply = multiply_create(cosine, env);
 
     audio_init();
 
     int i;
     for (i = 0; i < BLOCKS_IN_ONE_SEC; i++) {
-        float* block = mod_rdblock(cosine);
+        float* block = mod_rdblock(multiply);
         audio_write(block);
     }
 

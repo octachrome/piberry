@@ -94,5 +94,6 @@ void audio_write(float* block)
 
 void audio_free()
 {
+    snd_pcm_drain (playback_handle);
     snd_pcm_close (playback_handle);
 }
