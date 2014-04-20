@@ -15,6 +15,8 @@ void* mod_data(mod_handle_t handle);
 float* mod_rdblock(mod_handle_t handle);
 void mod_newblock();
 
-mod_handle_t cos_create(float freq);
+mod_handle_t cos_create_fixed(float freq);
+mod_handle_t cos_create_vco(mod_handle_t freq_in);
 mod_handle_t envelope_create(float attack, float decay);
 mod_handle_t multiply_create(mod_handle_t op1, mod_handle_t op2);
+mod_handle_t exp_create(mod_handle_t in, float a, float c);

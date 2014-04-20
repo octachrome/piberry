@@ -10,7 +10,7 @@
 char table_ready = 0;
 float table[TABLE_LEN];
 
-void create_table()
+static void create_table()
 {
     int i;
     for (i = 0; i < TABLE_LEN / 4; i++) {
@@ -32,29 +32,39 @@ void create_table()
 }
 
 typedef struct {
-    unsigned int samplesPerCycle;
-    unsigned int samplePos;
+    mod_handle_t freq_in;
+    float freq;
+    float phase;
 } cos_data_t;
 
-void cos_fillblock(mod_handle_t handle, float* block, void* d)
+static void cos_fillblock(mod_handle_t handle, float* block, void* d)
 {
     cos_data_t* data = (cos_data_t*) d;
-    int samplePos = data->samplePos;
-    int samplesPerCycle = data->samplesPerCycle;
+    float freq = data->freq;
+    float phase = data->phase;
+
+    float* freq_in;
+    if (freq == 0) {
+        freq_in = mod_rdblock(data->freq_in);
+    }
 
     int i;
     for (i = 0; i < BLOCK_FRAMES; i++) {
-        int phase = samplePos % samplesPerCycle;
-        int idx = TABLE_LEN * phase / samplesPerCycle;
-
+        int idx = (int) (phase * TABLE_LEN);
         block[i * 2] = block[i * 2 + 1] = table[idx];
-        samplePos++;
+
+        if (freq > 0) {
+            phase += freq / FRAME_RATE;
+        } else {
+            phase += freq_in[i] / FRAME_RATE;
+        }
+        if (phase >= 1) phase -= 1;
     }
 
-    data->samplePos = samplePos;
+    data->phase = phase;
 }
 
-mod_handle_t cos_create(float freq)
+static mod_handle_t cos_create(float freq, mod_handle_t freq_in)
 {
     if (!table_ready) {
         create_table();
@@ -64,10 +74,26 @@ mod_handle_t cos_create(float freq)
 
     cos_data_t* data = (cos_data_t*) mod_data(handle);
 
-    data->samplesPerCycle = FRAME_RATE / freq;
-    data->samplePos = 0;
+    if (freq > 0) {
+        data->freq = freq;
+        data->freq_in = -1;
+    } else {
+        data->freq_in = freq_in;
+        data->freq = 0;
+    }
+    data->phase = 0;
 
     return handle;
+}
+
+mod_handle_t cos_create_fixed(float freq)
+{
+    return cos_create(freq, -1);
+}
+
+mod_handle_t cos_create_vco(mod_handle_t freq_in)
+{
+    return cos_create(0, freq_in);
 }
 
 #define BLOCKS_IN_ONE_SEC (FRAME_RATE / BLOCK_FRAMES)
@@ -75,14 +101,16 @@ mod_handle_t cos_create(float freq)
 
 main()
 {
-    mod_handle_t cosine = cos_create(FREQ);
-    mod_handle_t env = envelope_create(0.01, 0.8);
+    mod_handle_t env = envelope_create(0.0005, 0.14);
+    mod_handle_t expn = exp_create(env, 40, .8);
+    mod_handle_t cosine = cos_create_vco(expn);
     mod_handle_t multiply = multiply_create(cosine, env);
 
     audio_init();
 
     int i;
     for (i = 0; i < BLOCKS_IN_ONE_SEC; i++) {
+        mod_newblock();
         float* block = mod_rdblock(multiply);
         audio_write(block);
     }

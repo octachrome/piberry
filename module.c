@@ -5,6 +5,7 @@
 typedef struct {
     mod_fillblock_t fillblock;
     mod_ontrigger_t ontrigger;
+    char filled;
     float block[BLOCK_SIZE];
 } mod_data_t;
 
@@ -17,6 +18,7 @@ mod_handle_t mod_create(mod_fillblock_t fillblock, mod_ontrigger_t ontrigger, in
     mod_handle_t handle = next_handle++;
 
     mod_data_t* data = modules[handle] = malloc(sizeof(mod_data_t) + bytes);
+    data->filled = 0;
     data->fillblock = fillblock;
     data->ontrigger = ontrigger;
 
@@ -32,6 +34,17 @@ void* mod_data(mod_handle_t handle)
 float* mod_rdblock(mod_handle_t handle)
 {
     mod_data_t* data = modules[handle];
-    data->fillblock(handle, data->block, ((char*) data) + sizeof(mod_data_t));
+    if (!data->filled) {
+        data->fillblock(handle, data->block, ((char*) data) + sizeof(mod_data_t));
+        data->filled = 1;
+    }
     return data->block;
+}
+
+void mod_newblock()
+{
+    int i;
+    for (i = 0; i < next_handle; i++) {
+        modules[i]->filled = 0;
+    }
 }
