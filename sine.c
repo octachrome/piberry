@@ -50,8 +50,11 @@ static void cos_fillblock(mod_handle_t handle, float* block, void* d)
 
     int i;
     for (i = 0; i < BLOCK_FRAMES; i++) {
-        int idx = (int) (phase * TABLE_LEN);
-        block[i * 2] = block[i * 2 + 1] = table[idx];
+        float idx = phase * TABLE_LEN;
+        int idx_low = (int) idx;
+        int idx_up = (idx_low + 1) % TABLE_LEN;
+        float idx_fract = idx - idx_low;
+        block[i * 2] = block[i * 2 + 1] = (table[idx_low] * (1-idx_fract) + table[idx_up] * idx_fract) / 2;
 
         if (freq > 0) {
             phase += freq / FRAME_RATE;
@@ -107,8 +110,8 @@ mod_handle_t cos_create_vco(mod_handle_t freq_in)
 
 main()
 {
-    mod_handle_t env = envelope_create(0.0005, 0.18);
-    mod_handle_t expn = exp_create(env, 40, 1.6);
+    mod_handle_t env = envelope_create(0.001, 0.2);
+    mod_handle_t expn = exp_create(env, 30, 1.2);
     mod_handle_t cosine = cos_create_vco(expn);
     mod_handle_t multiply = multiply_create(cosine, env);
 
