@@ -2,9 +2,6 @@
 // Ideas taken from https://github.com/dwelch67/raspberrypi/tree/master/blinker01
 // and http://crca.ucsd.edu/~msp/tmp/mmap-sinetest.c
 
-#define PHYS_PERIPHERAL_BASE 0x20000000
-#define PERIPHERAL_RANGE	 0x00300000
-
 #ifdef LINUX
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,46 +10,8 @@
 #include <unistd.h>
 static volatile void *peripheral_base;
 #define PERIPHERAL_BASE peripheral_base
-#else
-#define PERIPHERAL_BASE	PHYS_PERIPHERAL_BASE
 #endif
-
-#define ACCESS_PERI(offset) *((unsigned int volatile*)(PERIPHERAL_BASE + offset))
-#define WORDSIZE	4
-
-#define GPFSEL0		ACCESS_PERI(0x200000)
-#define GPFSEL1		ACCESS_PERI(0x200004)
-#define GPFSEL3		ACCESS_PERI(0x20000C)
-#define GPFSEL4		ACCESS_PERI(0x200010)
-#define GPSET0		ACCESS_PERI(0x20001C)
-#define GPCLR0		ACCESS_PERI(0x200028)
-#define GPLEV0		ACCESS_PERI(0x200034)
-#define GPEDS0		ACCESS_PERI(0x200040)
-#define GPREN0		ACCESS_PERI(0x20004C)
-#define GPFEN0		ACCESS_PERI(0x200058)
-#define GPHEN0		ACCESS_PERI(0x200064)
-#define GPLEN0		ACCESS_PERI(0x200070)
-#define GPLEN1		ACCESS_PERI(0x200074)
-#define GPAREN0		ACCESS_PERI(0x20007C)
-#define GPAFEN0		ACCESS_PERI(0x200088)
-#define GPPUD		ACCESS_PERI(0x200094)
-#define GPPUDCLK0	ACCESS_PERI(0x200098)
-
-#define PWM_CONTROL ACCESS_PERI(0x20C000)
-#define PWM_STATUS  ACCESS_PERI(0x20C004)
-#define PWM0_RANGE  ACCESS_PERI(0x20C010)
-#define PWM0_DATA   ACCESS_PERI(0x20C014)
-#define PWM_FIFO    ACCESS_PERI(0x20C018)
-#define PWM1_RANGE  ACCESS_PERI(0x20C020)
-#define PWM1_DATA   ACCESS_PERI(0x20C024)
-
-#define PWMCLK_CNTL ACCESS_PERI(0x1010A0)
-#define PWMCLK_DIV  ACCESS_PERI(0x1010A4)
-
-#define INTEN1		ACCESS_PERI(0x00B210)
-// In the manual this register is called "interrupt enable register 2"
-#define INTEN2		ACCESS_PERI(0x00B214)
-#define INTEN_BASIC	ACCESS_PERI(0x00B218)
+#include "pi.h"
 
 #define PULSES_PER_SAMPLE	2048
 
