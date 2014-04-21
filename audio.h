@@ -21,3 +21,16 @@ mod_handle_t cos_create_vco(mod_handle_t freq_in);
 mod_handle_t envelope_create(float attack, float decay);
 mod_handle_t multiply_create(mod_handle_t op1, mod_handle_t op2);
 mod_handle_t exp_create(mod_handle_t in, float a, float c);
+
+#define TABLE_LEN 1200
+
+static inline float table_lookup(float* table, float fidx, float max)
+{
+    float idx = fidx * TABLE_LEN;
+    int idx_low = (int) idx;
+    int idx_up = idx_low + 1;
+    float idx_fract = idx - idx_low;
+    float lower = table[idx_low];
+    float upper = idx_up < TABLE_LEN ? table[idx_up] : max;
+    return (lower * (1 - idx_fract) + upper * idx_fract) / 2;
+}

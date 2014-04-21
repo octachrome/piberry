@@ -2,33 +2,32 @@
 
 #include "audio.h"
 
+#define PI 3.14159265f
 #define FACT_4 (4*3*2)
 #define FACT_6 (6*5*4*3*2)
 
-#define TABLE_LEN 1200
+static char cos_table_ready = 0;
+static float cos_table[TABLE_LEN];
 
-char table_ready = 0;
-float table[TABLE_LEN];
-
-static void create_table()
+static void create_cos_table()
 {
     int i;
     for (i = 0; i < TABLE_LEN / 4; i++) {
-        float theta = 2 * M_PI * i / TABLE_LEN;
+        float theta = 2 * PI * i / TABLE_LEN;
         float t2 = theta * theta;
         float t4 = t2 * t2;
         float t6 = t4 * t2;
         float s = 1 - t2 / 2 + t4 / FACT_4 - t6 / FACT_6;
-        table[i] = s;
-        table[i + TABLE_LEN / 2] = -s;
+        cos_table[i] = s;
+        cos_table[i + TABLE_LEN / 2] = -s;
     }
 
     for (i = 0; i < TABLE_LEN / 4; i++) {
-        table[TABLE_LEN / 2 - i - 1] = -table[i];
-        table[TABLE_LEN - i - 1] = table[i];
+        cos_table[TABLE_LEN / 2 - i - 1] = -cos_table[i];
+        cos_table[TABLE_LEN - i - 1] = cos_table[i];
     }
 
-    table_ready = 1;
+    cos_table_ready = 1;
 }
 
 typedef struct {
@@ -50,11 +49,7 @@ static void cos_fillblock(mod_handle_t handle, float* block, void* d)
 
     int i;
     for (i = 0; i < BLOCK_FRAMES; i++) {
-        float idx = phase * TABLE_LEN;
-        int idx_low = (int) idx;
-        int idx_up = (idx_low + 1) % TABLE_LEN;
-        float idx_fract = idx - idx_low;
-        block[i * 2] = block[i * 2 + 1] = (table[idx_low] * (1-idx_fract) + table[idx_up] * idx_fract) / 2;
+        block[i * 2] = block[i * 2 + 1] = table_lookup(cos_table, phase, 1);
 
         if (freq > 0) {
             phase += freq / FRAME_RATE;
@@ -75,8 +70,8 @@ static void cos_ontrigger(mod_handle_t handle, void* d)
 
 static mod_handle_t cos_create(float freq, mod_handle_t freq_in)
 {
-    if (!table_ready) {
-        create_table();
+    if (!cos_table_ready) {
+        create_cos_table();
     }
 
     mod_handle_t handle = mod_create(cos_fillblock, cos_ontrigger, sizeof(cos_data_t));

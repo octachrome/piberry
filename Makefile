@@ -31,4 +31,4 @@ install : wave.bin
 	-eject /media/chris/C522-EA52
 
 alsa_test : alsa.c module.c sine.c envelope.c multiply.c
-	cc -o $@ -g $^ -lasound -lm
+	cc -o $@ -g $^ -lasound
