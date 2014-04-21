@@ -3,7 +3,7 @@ COPTS = -g -marm -mcpu=arm1176jzf-s -mfpu=vfp -Wall -Werror -fsingle-precision-c
 #  -nostartfiles -ffreestanding 
 # -mfpu=vfp is required to make the assembler accept the fpexc instruction as legal
 AOPTS = -g -mcpu=arm1176jzf-s -mfpu=vfp
-OBJS = start.o wave.o heap.o
+OBJS = start.o wave.o heap.o pwm.o
 
 all : wave.bin
 

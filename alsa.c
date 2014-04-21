@@ -1,4 +1,6 @@
 /**
+ * Audio wrapper for ALSA on Linux.
+ *
  * Derived from http://equalarea.com/paul/alsa-audio.html
  * aplay -l to list all ALSA devices; modify DEVICE, e.g., hw:0,0
  */
