@@ -53,3 +53,7 @@ void audio_write(float* block)
 		PWM_FIFO = data;
 	}
 }
+
+void audio_free()
+{
+}

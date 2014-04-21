@@ -145,16 +145,35 @@ raise:
 dummy:
 	bx		lr
 
+.global malloc
+
+malloc:
+	@; save num bytes to allocate in r1
+	mov		r1, r0
+	ldr		r2, =heap_pointer
+	@; current heap pointer will be returned in r0
+	ldr		r0, [r2]
+	@; adjust heap pointer and save it
+	add		r1, r1, r0
+	str		r1, [r2]
+	bx		lr
+
 .data
+
+heap_pointer:
+	.word	heap_base
 
 .space 0x1000,0xbb
 user_stack:
-.space 4,0xbb
+.word 0xbb
 
 .space 0x1000,0xbb
 irq_stack:
-.space 4,0xbb
+.word 0xbb
 
 .space 0x1000,0xbb
 und_stack:
-.space 4,0xbb
+.word 0xbb
+
+heap_base:
+.word 0xbb

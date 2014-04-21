@@ -3,7 +3,7 @@ COPTS = -g -marm -mcpu=arm1176jzf-s -mfpu=vfp -Wall -Werror -fsingle-precision-c
 #  -nostartfiles -ffreestanding 
 # -mfpu=vfp is required to make the assembler accept the fpexc instruction as legal
 AOPTS = -g -mcpu=arm1176jzf-s -mfpu=vfp
-OBJS = start.o wave.o heap.o pwm.o
+OBJS = start.o test.o pwm.o module.o sine.o envelope.o multiply.o
 
 all : wave.bin
 
@@ -30,5 +30,5 @@ install : wave.bin
 	sync
 	-eject /media/chris/C522-EA52
 
-alsa_test : alsa.c module.c sine.c envelope.c multiply.c
-	cc -o $@ -g $^ -lasound
+alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c
+	cc -DLINUX -o $@ -g $^ -lasound

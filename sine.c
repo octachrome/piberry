@@ -1,5 +1,3 @@
-#include <math.h>
-
 #include "audio.h"
 
 #define PI 3.14159265f
@@ -98,31 +96,4 @@ mod_handle_t cos_create_fixed(float freq)
 mod_handle_t cos_create_vco(mod_handle_t freq_in)
 {
     return cos_create(0, freq_in);
-}
-
-#define BLOCKS_IN_ONE_SEC (FRAME_RATE / BLOCK_FRAMES)
-#define FREQ 440
-
-main()
-{
-    mod_handle_t env = envelope_create(0.001, 0.2);
-    mod_handle_t expn = exp_create(env, 30, 1.2);
-    mod_handle_t cosine = cos_create_vco(expn);
-    mod_handle_t multiply = multiply_create(cosine, env);
-
-    audio_init();
-
-    int i = 0;
-    while (1) {
-        if (i++ % BLOCKS_IN_ONE_SEC == 0) {
-            mod_trigger(env);
-            mod_trigger(cosine);
-        }
-
-        mod_newblock();
-        float* block = mod_rdblock(multiply);
-        audio_write(block);
-    }
-
-    audio_free();
 }
