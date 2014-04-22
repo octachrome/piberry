@@ -1,12 +1,19 @@
-#define PHYS_PERIPHERAL_BASE 0x20000000
+#define BUS_PERIPHERAL_BASE 0x20000000
 #define PERIPHERAL_RANGE	 0x00300000
 
+// Add this to a peripheral bus address to get the physical address
+#define PERI_PHYS_OFFSET 0x5E000000
+// Add this to a RAM address to get the L2 coherent physical address
+#define RAM_PHYS_OFFSET  0x40000000
+
 #ifndef PERIPHERAL_BASE
-#define PERIPHERAL_BASE	PHYS_PERIPHERAL_BASE
+#define PERIPHERAL_BASE	BUS_PERIPHERAL_BASE
 #endif
 
 #define ACCESS_PERI(offset) *((unsigned int volatile*)(PERIPHERAL_BASE + offset))
-#define WORDSIZE	4
+
+#define DMA0_CS			ACCESS_PERI(0x007000)
+#define DMA0_CONBLK_AD	ACCESS_PERI(0x007004)
 
 #define GPFSEL0		ACCESS_PERI(0x200000)
 #define GPFSEL1		ACCESS_PERI(0x200004)
@@ -28,6 +35,7 @@
 
 #define PWM_CONTROL ACCESS_PERI(0x20C000)
 #define PWM_STATUS  ACCESS_PERI(0x20C004)
+#define PWM_DMAC	ACCESS_PERI(0x20C008)
 #define PWM0_RANGE  ACCESS_PERI(0x20C010)
 #define PWM0_DATA   ACCESS_PERI(0x20C014)
 #define PWM_FIFO    ACCESS_PERI(0x20C018)

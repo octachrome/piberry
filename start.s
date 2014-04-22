@@ -160,6 +160,12 @@ malloc:
 
 .data
 
+.global dma_control_blocks
+
+.align	8
+dma_control_blocks:
+	.space	0x80
+
 heap_pointer:
 	.word	heap_base
 
