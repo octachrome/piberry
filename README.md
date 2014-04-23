@@ -23,20 +23,20 @@ Build instructions
 
 - Install the ARM cross-compiler
 
-    sudo apt-get install gcc-arm-linux-gnueabihf
+        sudo apt-get install gcc-arm-linux-gnueabihf
 
 - Get a copy of libgcc from a Pi (GCC needs it for integer division), or Github:
 
-    git clone https://github.com/brianwiddas/pi-baremetal
+        git clone https://github.com/brianwiddas/pi-baremetal
 
 - Set `ARMGNU` to the prefix of the compiler you installed:
 
-    export ARMGNU=arm-linux-gnueabihf
+        export ARMGNU=arm-linux-gnueabihf
 
 - Edit the makefile and correct the path where `libgcc.a` can be found.
 - Make the binary image.
 
-    make
+        make
 
 - Copy the resulting `kernel.img` onto an SD card, along with the regular bootloader files (`start.elf`, `bootcode.bin` and `fixup.dat`), and an empty `config.txt`. You can get these from https://github.com/raspberrypi/firmware/tree/master/boot.
 
@@ -52,8 +52,8 @@ The audio pipeline also runs on x86 (or whatever) Linux, using ALSA for audio.
 
 - Build and run:
 
-    make alsa_test
-    ./alsa_test
+        make alsa_test
+        ./alsa_test
 
 
 Project structure
