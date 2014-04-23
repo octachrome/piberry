@@ -4,6 +4,8 @@
 #define BLOCKS_IN_HALF_SEC (FRAME_RATE / BLOCK_FRAMES / 2)
 #define FREQ 440
 
+volatile char trigger = 0;
+
 #ifndef LINUX
 extern int dummy(int);
 
@@ -67,8 +69,6 @@ void install_except_handler(int index, void* handler) {
     base[index] = (unsigned int) handler;
 }
 #endif
-
-volatile char trigger = 0;
 
 #ifdef LINUX
 void main()
