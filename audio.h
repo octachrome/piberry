@@ -1,5 +1,5 @@
 #define FRAME_RATE 48000                // samples per second, per channel
-#define BLOCK_FRAMES 128                // frames per block
+#define BLOCK_FRAMES 32                 // frames per block
 #define BLOCK_SIZE (BLOCK_FRAMES * 2)   // in words
 
 void audio_init();
