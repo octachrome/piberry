@@ -10,6 +10,7 @@ Current features are:
 - 12-bit PWM audio using DMA.
 - A basic modular audio pipeline (sine wave VCO, attack-decay envelope).
 - Very basic GPIO interrupt handling (if you ground GPIO 17, it plays the kick drum).
+- All DIY - no Linux, no third-party libraries (well, apart from libgcc).
 
 Coming soon:
 
@@ -25,16 +26,14 @@ Build instructions
 
         sudo apt-get install gcc-arm-linux-gnueabihf
 
-- Get a copy of libgcc from a Pi (GCC needs it for integer division), or Github:
-
-        git clone https://github.com/brianwiddas/pi-baremetal
+- Get a copy of libgcc (GCC needs it for integer division, etc.) from Raspbian, or [Github](https://github.com/brianwiddas/pi-baremetal/tree/master/rpi-libgcc).
 
 - Set `ARMGNU` to the prefix of the compiler you installed:
 
         export ARMGNU=arm-linux-gnueabihf
 
 - Edit the makefile and correct the path where `libgcc.a` can be found.
-- Make the binary image.
+- Make the binary image:
 
         make
 
@@ -44,7 +43,7 @@ Build instructions
 
 ### Using ALSA
 
-The audio pipeline also runs on x86 (or whatever) Linux, using ALSA for audio.
+For testing, you can also build the audio pipeline on x86 (or whatever) Linux, using ALSA for audio.
 
 - Run `aplay -l` and pick which sound card you want to play audio with. Note the card number and subdevice number.
 
@@ -72,7 +71,7 @@ Implements the `audio_` interface (defined in `audio.h`) using PWM. Creates a ci
 Implements the `audio_` interface using ALSA.
 
 ### module.c
-Implements the high-level modular audio API, `module_`. The basic idea to create audio in blocks of, say, 32 frames (one frame is a left channel sample and a right channel sample). In one iteration of the pipeline, all the modules create a block of audio data, and they all ultimately are chained together into some kind of final mixer module, whose output block gets sent to the `audio_` interface.
+Implements the high-level modular audio API, `module_`. The basic idea to create audio in blocks of, say, 32 frames (one frame is a left channel sample and a right channel sample). In one iteration of the pipeline, all the modules create a block of audio data, potentially taking their input from blocks created by other modules. The output from some final mixer module gets sent to the `audio_` interface.
 
 When you create a module you get a handle which you can use to read that module's current block. When you ask the module API for a module's current block, it lazily asks the module to populate it, if it hasn't already done so.
 
@@ -80,6 +79,9 @@ There is also a very basic trigger API, for triggering envelopes when a key is p
 
 ### sine.c, multiply.c, envelope.c
 Implementation of some very basic audio modules, from which simple synthesizers can be built.
+
+### docs/*
+Notes on what I have learned about baremetal Pi programming so far.
 
 Thanks
 ------

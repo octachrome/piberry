@@ -1,14 +1,14 @@
 Floating point
 ==============
 
-You can't get far doing audio without floating point arithmetic. It's turned off by default, so one of the first things that happens in `start.s` is enabling it.
+You can't get far doing audio without floating point arithmetic. It's turned off by default, so one of the first things that happens in `start.s` is enabling it. This document goes into quite a bit of detail on how it works, but you don't really need to understand everything to use floating point - just copy the code and skip the rest.
 
 Floating point is implemented using the confusing idea of ARM coprocessors. These are extensions to the ARM core which add support for additional instructions, etc. When the ARM core reads a instruction it cannot understand (like a floating point instruction), it asks the coprocessors if they can execute it, and hopefully they do so. While in some ways floating point on the ARM11 is quite simple, the idea of coprocessors is quite abstract, which makes some of the code used to interact with them hard to understand.
 
 Coprocessors are numbered from 0 to 15. The floating point coprocessor for the ARM11 is called the VFP11, and it appears as two coprocessors, CP10 and CP11. As it says in the manual:
 
 > In general, CP10 is used to encode single-precision operations, and CP11 is used to encode double-precision operations.
-> -- ARM ARM section C1.1
+> -- ARM ARM, section C1.1
 
 To make things more complicated, the ARM also has a coprocessor called the System Control Coprocessor, CP15, which is often used when interacting with the VFP11 and other peripherals like the memory management unit.
 
@@ -36,10 +36,43 @@ Now we need to enable CP10 and CP11, and then write the value back using `MCR`, 
 
 Coprocessor(s) enabled.
 
-Now we have to enable floating point. Wait, didn't we already do that? The last thing to do is to set the `EN` bit in the `FPEXC` register. This is one of the "normal" floating point registers, which includes 32 general purpose floating point registers and some control/status registers. To set `FPEXC`, we will use our first floating point instruction, `FMXR`:
+Now we have to enable floating point. Wait, didn't we already do that? The last thing to do is to set the `EN` bit in the `FPEXC` register. This is one of the "normal" floating point registers, which includes 32 general purpose floating point registers and some control/status registers. To modify `FPEXC`, we will use our first floating point instruction, `FMXR`:
 
-        @; enable vfp
+        @; enable vfp by setting EN (bit 30)
         mov     r0, #0x40000000
         fmxr    fpexc, r0
 
-Now we can use floating point instructions without raising undefined instruction exceptions.
+Now we can use floating point instructions without raising undefined instruction exceptions. Well, almost.
+
+Floating point support code
+---------------------------
+> A complete implementation of the VFP architecture must include a software component, known as the
+> support code, due to the existence of trapped floating-point exceptions. -- ARM ARM, section C1.2.4
+
+The default floating point mode on the ARM11 is to implement the most common floating point operations in hardware, and delgate to software for special cases. This is done by raising an unsupported operation exception, called a *trap*, in which you the programmer are supposed to figure out what went wrong (e.g., an underflow), calculate the correct result, and resume the program.
+
+If, like me, you don't feel like implementing a bunch of floating point operations, there is an alternative: RunFast mode, or Flush-to-zero mode (which *nearly* means the same thing). This is a pure hardware floating point implementation which is not-quite IEEE 754-compliant. I'm not exactly sure what this means in detail, but I do know that for audio purposes I don't hugely care about the edge cases. Approximate results are OK by me.
+
+Here are two contradicting statements about Flush-to-zero mode:
+
+> Underflow exceptions only occur in Flush-to-zero mode when a result is flushed to zero. They are
+> always treated as untrapped, and the Underflow trap enable (UFE) bit in the FPSCR is ignored. -- ARM ARM, section C2.4
+
+> If the FZ bit is set, all underflowing results are forced to a positive signed zero and written to the
+> destination register. The UFC flag is set in the FPSCR. No trap is taken. If the Underflow
+> exception enable bit is set, it is ignored. -- ARM1176JZF-S Technical Reference Manual, section 22.9.
+
+I believe the second one, since it is more specific to the core used in the BCM2835.
+
+So that you can forget about all this and move on, you need to do two things: disable all the floating point traps, and enable Flush-to-zero. The bits for these are all in `FPSCR`, which is the main floating point status and control register:
+
+        @; load the status register
+        fmrx    r0, fpscr
+        @; enable flush-to-zero (bit 24)
+        orr     r0, #0x01000000
+        @; disable traps (bits 8-12 and bit 15)
+        bic     r0, #0x9f00
+        @; save the status register
+        fmxr    fpscr, r0
+
+OK, *now* you can use floating point instructions.
