@@ -1,0 +1,116 @@
+#ifdef LINUX
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
+static volatile void *peripheral_base;
+#define PERIPHERAL_BASE peripheral_base
+#endif
+#include "pi.h"
+#include "audio.h"
+
+int gpio_level(int gpio)
+{
+    if (gpio < 32) {
+        return GPLEV0 & (1 << gpio);
+    } else {
+        return GPLEV1 & (1 << (gpio - 32));
+    }
+}
+
+void gpio_set(int gpio)
+{
+    if (gpio < 32) {
+        GPSET0 = 1 << gpio;
+    } else {
+        GPSET1 = 1 << (gpio - 32);
+    }
+}
+
+void gpio_clear(int gpio)
+{
+    if (gpio < 32) {
+        GPCLR0 = 1 << gpio;
+    } else {
+        GPCLR1 = 1 << (gpio - 32);
+    }
+}
+
+void gpio_config(int gpio, int config)
+{
+    if (gpio < 10) {
+        int shift = gpio * 3;
+        GPFSEL0 = (GPFSEL0 & ~(7 << shift)) | (config << shift);
+    } else if (gpio < 20) {
+        int shift = (gpio - 10) * 3;
+        GPFSEL1 = (GPFSEL1 & ~(7 << shift)) | (config << shift);
+    } else if (gpio < 30) {
+        int shift = (gpio - 20) * 3;
+        GPFSEL2 = (GPFSEL2 & ~(7 << shift)) | (config << shift);
+    }
+}
+
+void gpio_pullups(int* gpios, int count)
+{
+    unsigned int clocks0 = 0;
+    unsigned int clocks1 = 0;
+    int i;
+    for (i = 0; i < count; i++) {
+        int gpio = gpios[i];
+        if (gpio < 32) {
+            clocks0 |= (1 << gpio);
+        } else {
+            clocks1 |= (1 << (gpio - 32));
+        }
+    }
+
+    GPPUD = 2;
+    delay_short();
+    GPPUDCLK0 = clocks0;
+    GPPUDCLK1 = clocks1;
+    delay_short();
+    GPPUD = 0;
+    GPPUDCLK0 = 0;
+    GPPUDCLK1 = 0;
+}
+
+void gpio_pullup(int gpio)
+{
+    int gpios[1] = {gpio};
+    gpio_pullups(gpios, 1);
+}
+
+#ifdef LINUX
+volatile void *map_memory(unsigned int base, unsigned int size)
+{
+    int fd;
+    volatile void *map;
+
+    /* open /dev/mem */
+    if ((fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+        printf("can't open /dev/mem \n");
+        exit(-1);
+    }
+
+    /* mmap GPIO */
+    map = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base);
+
+    close(fd); //No need to keep mem_fd open after mmap
+
+    if (map == MAP_FAILED) {
+        printf("mmap error %d\n", (int) map);//errno also set!
+        exit(-1);
+    }
+
+    return map;
+}
+#endif
+
+void gpio_init()
+{
+#ifdef LINUX
+    peripheral_base = map_memory(BUS_PERIPHERAL_BASE, PERIPHERAL_RANGE);
+#endif
+}

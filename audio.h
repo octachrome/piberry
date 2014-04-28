@@ -22,6 +22,17 @@ mod_handle_t envelope_create(float attack, float decay);
 mod_handle_t multiply_create(mod_handle_t op1, mod_handle_t op2);
 mod_handle_t exp_create(mod_handle_t in, float a, float c);
 
+void gpio_init();
+int gpio_level(int gpio);
+void gpio_set(int gpio);
+void gpio_clear(int gpio);
+void gpio_config(int gpio, int config);
+void gpio_pullups(int* gpios, int count);
+void gpio_pullup(int gpio);
+
+#define GPIO_IN  0
+#define GPIO_OUT 1
+
 #define TABLE_LEN 1200
 
 static inline float table_lookup(float* table, float fidx, float max)
@@ -33,4 +44,19 @@ static inline float table_lookup(float* table, float fidx, float max)
     float lower = table[idx_low];
     float upper = idx_up < TABLE_LEN ? table[idx_up] : max;
     return (lower * (1 - idx_fract) + upper * idx_fract) / 2;
+}
+
+extern int __divsi3(int i, int j);
+
+static inline void delay(int cycles)
+{
+    int i;
+    for (i = 0; i < cycles; i++) {
+        __divsi3(12345, 321);
+    }
+}
+
+static inline void delay_short()
+{
+    delay(150);
 }
