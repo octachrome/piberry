@@ -82,7 +82,7 @@ void notmain()
 #endif
 
     mod_handle_t env = envelope_create(0.001, 0.2);
-    mod_handle_t expn = exp_create(env, 50, 1.2);
+    mod_handle_t expn = exp_create(env, 40, 1.2);
     mod_handle_t cosine = cos_create_vco(expn);
     mod_handle_t multiply = multiply_create(cosine, env);
 

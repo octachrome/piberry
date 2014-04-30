@@ -1,5 +1,5 @@
 #define FRAME_RATE 48000                // samples per second, per channel
-#define BLOCK_FRAMES 32                 // frames per block
+#define BLOCK_FRAMES 64                 // frames per block
 #define BLOCK_SIZE (BLOCK_FRAMES * 2)   // in words
 
 void audio_init();
@@ -43,7 +43,7 @@ static inline float table_lookup(float* table, float fidx, float max)
     float idx_fract = idx - idx_low;
     float lower = table[idx_low];
     float upper = idx_up < TABLE_LEN ? table[idx_up] : max;
-    return (lower * (1 - idx_fract) + upper * idx_fract) / 2;
+    return lower * (1 - idx_fract) + upper * idx_fract;
 }
 
 extern int __divsi3(int i, int j);
