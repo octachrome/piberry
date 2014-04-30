@@ -60,3 +60,16 @@ static inline void delay_short()
 {
     delay(150);
 }
+
+static inline void blink()
+{
+    gpio_config(16, GPIO_OUT);
+
+    int i = 2;
+    while (i-- > 0) {
+        gpio_set(16);
+        delay(1000000);
+        gpio_clear(16);
+        delay(1000000);
+    }
+}

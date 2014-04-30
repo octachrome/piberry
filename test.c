@@ -7,52 +7,16 @@
 volatile char trigger = 0;
 
 #ifndef LINUX
-extern int dummy(int);
-
-void delay() {
-    int i;
-    for (i = 0; i < 0x100000; i++) {
-        dummy(i);
-    }
-}
-
-void delay_short() {
-    int i;
-    for (i = 0; i < 150; i++) {
-        dummy(i);
-    }
-}
 
 void configure_gpio_irq() {
-    // GPIO17 as input
-    GPFSEL1 = GPFSEL1 & ~(7 << 21);
-
-    // Pull-up on GPIO17
-    GPPUD = 2;
-    delay_short();
-    GPPUDCLK0 = (1 << 17);
-    delay_short();
-    GPPUD = 0;
-    GPPUDCLK0 = 0;
+    gpio_config(17, GPIO_IN);
+    gpio_pullup(17);
 
     // IRQ when GPIO17 is pulled low
     GPFEN0 = GPFEN0 | (1 << 17);
 
     // Enable IRQ49 = gpio_irq[0] = interrupts from GPIO pins 0-31
     INTEN2 = 1 << (49 - 32);
-}
-
-void blink() {
-    // GPIO16 as output
-    GPFSEL1 = (GPFSEL1 & ~(7 << 18)) | (1 << 18);
-
-    int i = 2;
-    while (i-- > 0) {
-        GPSET0 = 1 << 16;
-        delay();
-        GPCLR0 = 1 << 16;
-        delay();
-    }
 }
 
 __attribute__((interrupt("IRQ")))

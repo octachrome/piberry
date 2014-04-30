@@ -1,18 +1,6 @@
 #include <stdio.h>
 #include "audio.h"
 
-void blink() {
-    gpio_config(16, GPIO_OUT);
-
-    int i = 2;
-    while (i-- > 0) {
-        gpio_set(16);
-        delay(1000000);
-        gpio_clear(16);
-        delay(1000000);
-    }
-}
-
 // int banks[] = {15, 4, 11, 17, 10, 22, 27, 9, 14};
 int banks[] = {10, 15, 14, 27, 17, 9, 22, 4, 11};
 int nbanks = 9;
