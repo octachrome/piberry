@@ -2,12 +2,10 @@
 #include "pi.h"
 
 #define BLOCKS_IN_HALF_SEC (FRAME_RATE / BLOCK_FRAMES / 2)
-#define FREQ 440
 
 volatile char trigger = 0;
 
 #ifndef LINUX
-
 void configure_gpio_irq() {
     gpio_config(17, GPIO_IN);
     gpio_pullup(17);
