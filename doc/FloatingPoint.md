@@ -15,7 +15,7 @@ To make things more complicated, the ARM also has a coprocessor called the Syste
 Enabling floating point
 -----------------------
 
-To enable floating point, the first thing we do is enable the two coprocessors, CP10 and CP11. We do this by writing to a register in CP15. CP15 has several registers, which are numbered. Register 1 is described in section B3.4, and it is in fact three registers masquerading as one. One of these subregisters is called the Coprocessor Access Register (section B3.4.3), which it is just a bunch of bits which are set to 1 if the corresponding coprocessor is enabled. Now, let me introduce the `MRC` instruction, which reads the value of a coprocessor register, amongst other things:
+To enable floating point, the first thing we do is enable the two coprocessors, CP10 and CP11. We do this by writing to a register in CP15. CP15 has several registers, which are numbered. Register 1 is described in section B3.4, and it is in fact three registers masquerading as one. One of these subregisters is called the Coprocessor Access Register (section B3.4.3), which it is just a bunch of bits which are set to 1 if the corresponding coprocessor is enabled. Now, let me introduce the somewhat confusing `MRC` instruction, which reads the value of a coprocessor register, amongst other things:
 
         @; Load the contents of the coprocessor access register into r0
         mrc     p15, 0, r0, c1, c0, 2
@@ -76,3 +76,18 @@ So that you can forget about all this and move on, you need to do two things: di
         fmxr    fpscr, r0
 
 OK, *now* you can use floating point instructions.
+
+ABIs and compiler options
+-------------------------
+
+I compile using the `arm-linux-gnueabihf` version of GCC. The other commonly available ARM GCC target is `arm-linux-gnueabi`. The difference is that they target two different Application Binary Interfaces (ABIs). An ABI is a set of standards about how to call subroutines, how to invoke OS calls, etc. An ABI allows two programs or libraries built with different compilers to reliably work together. In a bare metal environment, you can choose any ABI because you are not linking or running against anyone else's code.
+
+`gnueabihf` is the newest of the ARM GCC targets, and it generates faster calls to subroutines with floating point arguments. This is because the older `gnueabi` allows code which can run on ARM cores with no hardware floating point (these cores use software emulation of floating point instructions), and part of the strategy is to always pass floating point function arguments in the ARM integer registers (because the floating point registers may not exist on some platforms).
+
+Whatever your ABI, compile and assemble with `-mfpu=vfp`, which tells the compiler to generate VFPv2 instructions. Without this flag, I have seen the compiler generate VFPv3 instructions, which are not implemented on the BCM2835.
+
+See also
+--------
+
+- [ARM Architecture Reference Manual](https://www.scss.tcd.ie/~waldroj/3d1/arm_arm.pdf), section C (Google "ARM DDI 0100i" if the link is broken).
+- https://wiki.debian.org/ArmHardFloatPort and https://wiki.debian.org/ArmEabiPort, for more info on ARM ABIs.
