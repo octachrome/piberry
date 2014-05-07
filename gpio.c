@@ -88,19 +88,17 @@ volatile void *map_memory(unsigned int base, unsigned int size)
     int fd;
     volatile void *map;
 
-    /* open /dev/mem */
     if ((fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
         printf("can't open /dev/mem \n");
         exit(-1);
     }
 
-    /* mmap GPIO */
     map = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base);
 
-    close(fd); //No need to keep mem_fd open after mmap
+    close(fd);
 
     if (map == MAP_FAILED) {
-        printf("mmap error %d\n", (int) map);//errno also set!
+        printf("mmap error\n");
         exit(-1);
     }
 

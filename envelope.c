@@ -32,7 +32,7 @@ void envelope_fillblock(mod_handle_t handle, float* block, void* d)
     data->samplePos = samplePos;
 }
 
-void envelope_ontrigger(mod_handle_t handle, void* d)
+void envelope_ontrigger(mod_handle_t handle, void* d, float value)
 {
     envelope_data_t* data = (envelope_data_t*) d;
     data->samplePos = 0;

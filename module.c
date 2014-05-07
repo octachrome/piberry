@@ -42,11 +42,11 @@ float* mod_rdblock(mod_handle_t handle)
 }
 
 
-void mod_trigger(mod_handle_t handle)
+void mod_trigger(mod_handle_t handle, float value)
 {
     mod_data_t* data = modules[handle];
     if (data->ontrigger) {
-        data->ontrigger(handle, ((char*) data) + sizeof(mod_data_t));
+        data->ontrigger(handle, ((char*) data) + sizeof(mod_data_t), value);
     }
 }
 

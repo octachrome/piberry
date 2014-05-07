@@ -60,7 +60,7 @@ static void cos_fillblock(mod_handle_t handle, float* block, void* d)
     data->phase = phase;
 }
 
-static void cos_ontrigger(mod_handle_t handle, void* d)
+static void cos_ontrigger(mod_handle_t handle, void* d, float value)
 {
     cos_data_t* data = (cos_data_t*) d;
     data->phase = 0;
