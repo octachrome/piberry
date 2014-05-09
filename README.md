@@ -33,11 +33,13 @@ Build instructions
         export ARMGNU=arm-linux-gnueabihf
 
 - Edit the makefile and correct the path where `libgcc.a` can be found.
-- Make the binary image:
+- Make the binary image file, kernel.img:
 
         make
 
-- Copy the resulting `kernel.img` onto an SD card, along with the regular bootloader files (`start.elf`, `bootcode.bin` and `fixup.dat`), and an empty `config.txt`. You can get these from https://github.com/raspberrypi/firmware/tree/master/boot.
+- Format an SD card with FAT16 or FAT32 (I had problems with two FAT12 cards until I reformatted them with FAT16).
+
+- Copy the `kernel.img` you just built onto the SD card, along with the regular bootloader files, `start.elf` and `bootcode.bin` (you can get these from https://github.com/raspberrypi/firmware/tree/master/boot.)
 
 - Plug your SD card, headphones and power cable into your Pi, and listen.
 

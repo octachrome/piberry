@@ -5,10 +5,10 @@ COPTS = -g -marm -mcpu=arm1176jzf-s -mfpu=vfp -Wall -Werror -fsingle-precision-c
 AOPTS = -g -mcpu=arm1176jzf-s -mfpu=vfp
 OBJS = start.o test.o pwm.o module.o sine.o envelope.o multiply.o gpio.o kbd.o
 
-all : clean wave.bin
+all : clean kernel.img
 
 clean :
-	-rm *.o *.elf *.bin
+	-rm *.o *.elf *.img
 
 %.o : %.c
 	$(ARMGNU)-gcc $(COPTS) -c $<
@@ -16,17 +16,14 @@ clean :
 %.o : %.s
 	$(ARMGNU)-as $(AOPTS) -o $@ $<
 
-wave.elf : $(OBJS) rpi.ld
-	$(ARMGNU)-ld -o wave.elf $(OBJS) -T rpi.ld -static -L/home/chris/code/pi-baremetal/rpi-libgcc -lgcc
+kernel.elf : $(OBJS) rpi.ld
+	$(ARMGNU)-ld -o kernel.elf $(OBJS) -T rpi.ld -static -L/home/chris/code/pi-baremetal/rpi-libgcc -lgcc
 
-wave.linux.elf : $(OBJS)
-	$(ARMGNU)-gcc -o wave.linux.elf $(COPTS) $(OBJS)
-
-%.bin : %.elf
+%.img : %.elf
 	$(ARMGNU)-objcopy -O binary $< $@
 
-install : wave.bin
-	cp wave.bin /media/chris/C522-EA52/kernel.img
+install : kernel.img
+	cp kernel.img /media/chris/C522-EA52/kernel.img
 	sync
 	-eject /media/chris/C522-EA52
 
