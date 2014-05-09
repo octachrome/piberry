@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "audio.h"
 #include "pi.h"
 
@@ -32,7 +33,7 @@ void install_except_handler(int index, void* handler) {
 }
 #endif
 
-#ifdef LINUX
+/*#ifdef LINUX
 void main()
 #else
 void notmain()
@@ -69,4 +70,30 @@ void notmain()
     }
 
     audio_free();
+}
+*/
+
+void onevent(int event_type, int key)
+{
+    if (event_type == KEY_UP) {
+        printf("key up: %d\n", key);
+    } else {
+        printf("key down: %d\n", key);
+    }
+}
+
+int main() {
+    int banks[] = {10, 15, 14, 27, 17, 9, 22, 4, 11};
+    int nbanks = 9;
+    int inputs[] = {18, 23, 24, 25, 8, 7};
+    int ninputs = 6;
+
+    gpio_init();
+    kbd_init(banks, nbanks, inputs, ninputs, onevent);
+
+    while (1) {
+        kbd_scan();
+    }
+
+    return 0;
 }

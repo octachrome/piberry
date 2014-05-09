@@ -1,20 +1,22 @@
-#include <stdio.h>
 #include "audio.h"
 
-int* banks;
-int nbanks;
-int* inputs;
-int ninputs;
+struct {
+    int* banks;
+    int nbanks;
+    int* inputs;
+    int ninputs;
+    unsigned int keystates[4]; // space for 128 midi keys
+    kbd_onevent_t onevent;
+} data;
 
-// Hopefully this is larger than nbanks
-int keymap[20];
 
-void kbd_init(int* banks_, int nbanks_, int* inputs_, int ninputs_)
+void kbd_init(int* banks, int nbanks, int* inputs, int ninputs, kbd_onevent_t onevent)
 {
-    banks = banks_;
-    nbanks = nbanks_;
-    inputs = inputs_;
-    ninputs = ninputs_;
+    data.banks = banks;
+    data.nbanks = nbanks;
+    data.inputs = inputs;
+    data.ninputs = ninputs;
+    data.onevent = onevent;
 
     int b, i;
     for (b = 0; b < nbanks; b++) {
@@ -31,39 +33,35 @@ void kbd_init(int* banks_, int nbanks_, int* inputs_, int ninputs_)
 
 void kbd_scan() {
     int b, i;
-    for (b = 0; b < nbanks; b++) {
-        int bank = banks[b];
+    for (b = 0; b < data.nbanks; b++) {
+        int bank = data.banks[b];
         gpio_clear(bank);
         delay(100000);
 
-        for (i = 0; i < ninputs; i++) {
-            int input = inputs[i];
+        for (i = 0; i < data.ninputs; i++) {
+            int input = data.inputs[i];
+            int key = b * data.ninputs + i;
+
+            int byte = key / 32;
+            int bit = key % 32;
+            unsigned int state = data.keystates[byte] & (1 << bit);
 
             if (gpio_level(input) == 0) {
-                // printf("key %d %d\n", b, i);
+                if (!state) {
+                    data.onevent(KEY_DOWN, key);
+                    data.keystates[byte] |= (1 << bit);
+                }
+            } else {
+                if (state) {
+                    data.onevent(KEY_UP, key);
+                    data.keystates[byte] &= ~(1 << bit);
+                }
             }
         }
 
         gpio_set(bank);
     }
 }
-
-/*int main() {
-    int banks[] = {10, 15, 14, 27, 17, 9, 22, 4, 11};
-    int nbanks = 9;
-    int inputs[] = {18, 23, 24, 25, 8, 7};
-    int ninputs = 6;
-
-    gpio_init();
-    kbd_init(banks, nbanks, inputs, ninputs);
-
-    while (1) {
-        kbd_scan();
-    }
-
-    return 0;
-}
-*/
 
 void value_fillblock(mod_handle_t handle, float* block, void* d)
 {

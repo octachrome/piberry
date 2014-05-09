@@ -34,6 +34,13 @@ void gpio_pullup(int gpio);
 #define GPIO_IN  0
 #define GPIO_OUT 1
 
+typedef void (*kbd_onevent_t)(int event_type, int key);
+void kbd_init(int* banks, int nbanks, int* inputs, int ninputs, kbd_onevent_t onevent);
+void kbd_scan();
+
+#define KEY_UP   0
+#define KEY_DOWN 1
+
 #define TABLE_LEN 1200
 
 static inline float table_lookup(float* table, float fidx, float max)
@@ -47,12 +54,12 @@ static inline float table_lookup(float* table, float fidx, float max)
     return lower * (1 - idx_fract) + upper * idx_fract;
 }
 
-#ifdef LINUX
-extern int __divti3(int i, int j);
-#define WORK __divti3(12345, 321)
-#else
+#ifdef __arm__
 extern int __divsi3(int i, int j);
 #define WORK __divsi3(12345, 321)
+#else
+extern int __divti3(int i, int j);
+#define WORK __divti3(12345, 321)
 #endif
 
 static inline void delay(int cycles)
