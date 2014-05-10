@@ -11,7 +11,7 @@
 
 #include "audio.h"
 
-#define DEVICE "hw:1,0"
+#define DEVICE "hw:0,0"
 
 static snd_pcm_t *playback_handle;
 

@@ -29,3 +29,6 @@ install : kernel.img
 
 alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c
 	cc -DLINUX -o $@ -g $^ -lasound
+
+run : alsa_test
+	sudo ./alsa_test

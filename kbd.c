@@ -36,7 +36,6 @@ void kbd_scan() {
     for (b = 0; b < data.nbanks; b++) {
         int bank = data.banks[b];
         gpio_clear(bank);
-        delay(100000);
 
         for (i = 0; i < data.ninputs; i++) {
             int input = data.inputs[i];

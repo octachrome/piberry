@@ -33,45 +33,9 @@ void install_except_handler(int index, void* handler) {
 }
 #endif
 
-/*#ifdef LINUX
-void main()
-#else
-void notmain()
-#endif
-{
-#ifndef LINUX
-    install_except_handler(6, irq_handler);
-    configure_gpio_irq();
-#endif
-
-    mod_handle_t env = envelope_create(0.001, 0.2);
-    mod_handle_t expn = exp_create(env, 40, 1.2);
-    mod_handle_t cosine = cos_create_vco(expn);
-    // mod_handle_t out = multiply_create(cosine, env);
-
-    mod_handle_t keyval = value_create(0);
-    mod_handle_t expn2 = exp_create(keyval, 220, 1.0/12);
-    mod_handle_t out = cos_create_vco(expn2);
-
-    audio_init();
-
-    int i = 0, j = 0;
-    while (1) {
-        if (trigger || i++ % BLOCKS_IN_HALF_SEC == 0) {
-            mod_trigger(env, 0);
-            mod_trigger(cosine, 0);
-            mod_trigger(keyval, j++);
-            trigger = 0;
-        }
-
-        mod_newblock();
-        float* block = mod_rdblock(out);
-        audio_write(block);
-    }
-
-    audio_free();
-}
-*/
+mod_handle_t env;
+mod_handle_t cosine;
+mod_handle_t keyval;
 
 void onevent(int event_type, int key)
 {
@@ -79,10 +43,18 @@ void onevent(int event_type, int key)
         printf("key up: %d\n", key);
     } else {
         printf("key down: %d\n", key);
+        mod_trigger(keyval, key);
+        mod_trigger(env, 0);
+        mod_trigger(cosine, 0);
     }
 }
 
-int main() {
+#ifdef LINUX
+void main()
+#else
+void notmain()
+#endif
+{
     int banks[] = {10, 15, 14, 27, 17, 9, 22, 4, 11};
     int nbanks = 9;
     int inputs[] = {18, 23, 24, 25, 8, 7};
@@ -91,9 +63,24 @@ int main() {
     gpio_init();
     kbd_init(banks, nbanks, inputs, ninputs, onevent);
 
+    env = envelope_create(0.001, 0.2);
+    mod_handle_t expn = exp_create(env, 40, 1.2);
+    cosine = cos_create_vco(expn);
+    // mod_handle_t out = multiply_create(cosine, env);
+
+    keyval = value_create(0);
+    mod_handle_t expn2 = exp_create(keyval, 65, 1.0/12);
+    mod_handle_t out = cos_create_vco(expn2);
+
+    audio_init();
+
+
     while (1) {
         kbd_scan();
+        mod_newblock();
+        float* block = mod_rdblock(out);
+        audio_write(block);
     }
 
-    return 0;
+    audio_free();
 }
