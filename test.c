@@ -63,14 +63,15 @@ void notmain()
     gpio_init();
     kbd_init(banks, nbanks, inputs, ninputs, onevent);
 
-    env = envelope_create(0.001, 0.2);
-    mod_handle_t expn = exp_create(env, 40, 1.2);
-    cosine = cos_create_vco(expn);
-    // mod_handle_t out = multiply_create(cosine, env);
+    // env = envelope_create(0.001, 0.2);
+    // mod_handle_t expn = exp_create(env, 40, 1.2);
 
     keyval = value_create(0);
-    mod_handle_t expn2 = exp_create(keyval, 65, 1.0/12);
-    mod_handle_t out = cos_create_vco(expn2);
+    env = envelope_create(0.01, 1);
+    mod_handle_t expn = exp_create(keyval, 65, 1.0/12);
+
+    cosine = cos_create_vco(expn);
+    mod_handle_t out = multiply_create(cosine, env);
 
     audio_init();
 
