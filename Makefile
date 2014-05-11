@@ -3,7 +3,7 @@ COPTS = -g -marm -mcpu=arm1176jzf-s -mfpu=vfp -Wall -Werror -fsingle-precision-c
 #  -nostartfiles -ffreestanding 
 # -mfpu=vfp is required to make the assembler accept the fpexc instruction as legal
 AOPTS = -g -mcpu=arm1176jzf-s -mfpu=vfp
-OBJS = start.o test.o pwm.o module.o sine.o envelope.o multiply.o gpio.o kbd.o
+OBJS = start.o test.o pwm.o module.o sine.o envelope.o multiply.o gpio.o kbd.o simple.o
 
 all : clean kernel.img
 
@@ -11,6 +11,9 @@ clean :
 	-rm *.o *.elf *.img
 
 %.o : %.c
+	$(ARMGNU)-gcc $(COPTS) -c $<
+
+%.o : patches/%.c
 	$(ARMGNU)-gcc $(COPTS) -c $<
 
 %.o : %.s
@@ -27,7 +30,7 @@ install : kernel.img
 	sync
 	-eject /media/chris/3866-C336
 
-alsa_test : raw_out.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c
+alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c patches/simple.c patches/kick.c
 	cc -DLINUX -o $@ -g $^ -lasound
 
 run : alsa_test

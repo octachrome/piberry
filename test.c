@@ -34,18 +34,12 @@ void install_except_handler(int index, void* handler) {
 }
 #endif
 
-mod_handle_t env;
-mod_handle_t cosine;
-mod_handle_t keyval;
-mod_handle_t sr;
+mod_handle_t patch;
 
 void onevent(int event_type, int key)
 {
     if (event_type == KEY_DOWN) {
-        mod_trigger(keyval, key & 0xff);
-        mod_trigger(env, 0);
-        mod_trigger(cosine, 0);
-        mod_trigger(sr, 0);
+        mod_trigger(patch, key);
     }
 }
 
@@ -64,23 +58,18 @@ void notmain()
     gpio_init();
     kbd_init(banks, nbanks, inputs, ninputs, onevent);
 
-    // env = envelope_create(0.001, 0.2);
-    // mod_handle_t expn = exp_create(env, 40, 1.2);
-
-    keyval = value_create(0);
-    env = envelope_create(0.01, 1);
-    mod_handle_t expn = exp_create(keyval, 65, 1.0/12);
-
-    cosine = cos_create_vco(expn);
-    mod_handle_t sig = multiply_create(cosine, env);
-    sr = switchramp_create(sig, 0.01);
+    patch = simple_create();
 
     audio_init();
 
+    // int j = 0;
     while (1) {
+        // if (j++ % BLOCKS_IN_HALF_SEC == 0) {
+        //     mod_trigger(patch, 20);
+        // }
         kbd_scan();
         mod_newblock();
-        float* block = mod_rdblock(sr);
+        float* block = mod_rdblock(patch);
         audio_write(block);
     }
 

@@ -11,6 +11,7 @@ typedef void (*mod_fillblock_t)(mod_handle_t handle, float* block, void* data);
 typedef void (*mod_ontrigger_t)(mod_handle_t handle, void* data, float value);
 
 mod_handle_t mod_create(mod_fillblock_t fillblock, mod_ontrigger_t ontrigger, int bytes);
+mod_handle_t mod_create_patch(mod_handle_t proxy_handle, mod_ontrigger_t ontrigger, int bytes);
 void* mod_data(mod_handle_t handle);
 float* mod_rdblock(mod_handle_t handle);
 void mod_trigger(mod_handle_t handle, float value);
@@ -24,12 +25,19 @@ mod_handle_t cos_create_vco(mod_handle_t freq_in);
 mod_handle_t envelope_create(float attack, float decay);
 // Samples the audio stream, and when triggered, linearly blends from the last sample to the next block.
 mod_handle_t switchramp_create(mod_handle_t in, float time);
+// Adds two input streams.
+mod_handle_t add_create(mod_handle_t op1, mod_handle_t op2);
 // Multiplies two input streams.
 mod_handle_t multiply_create(mod_handle_t op1, mod_handle_t op2);
 // Calculates a * 2 ^ (b * input).
 mod_handle_t exp_create(mod_handle_t in, float a, float c);
 // Continually repeats the value from the last trigger.
 mod_handle_t value_create(float value);
+
+// A really simple kick drum synth
+mod_handle_t simple_create();
+// A simple cosine synth
+mod_handle_t simple_create();
 
 void gpio_init();
 int gpio_level(int gpio);
