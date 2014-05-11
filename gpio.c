@@ -13,33 +13,42 @@ static volatile void *peripheral_base;
 
 int gpio_level(int gpio)
 {
+#ifdef __arm__
     if (gpio < 32) {
         return GPLEV0 & (1 << gpio);
     } else {
         return GPLEV1 & (1 << (gpio - 32));
     }
+#else
+    return 0;
+#endif
 }
 
 void gpio_set(int gpio)
 {
+#ifdef __arm__
     if (gpio < 32) {
         GPSET0 = 1 << gpio;
     } else {
         GPSET1 = 1 << (gpio - 32);
     }
+#endif
 }
 
 void gpio_clear(int gpio)
 {
+#ifdef __arm__
     if (gpio < 32) {
         GPCLR0 = 1 << gpio;
     } else {
         GPCLR1 = 1 << (gpio - 32);
     }
+#endif
 }
 
 void gpio_config(int gpio, int config)
 {
+#ifdef __arm__
     if (gpio < 10) {
         int shift = gpio * 3;
         GPFSEL0 = (GPFSEL0 & ~(7 << shift)) | (config << shift);
@@ -50,10 +59,12 @@ void gpio_config(int gpio, int config)
         int shift = (gpio - 20) * 3;
         GPFSEL2 = (GPFSEL2 & ~(7 << shift)) | (config << shift);
     }
+#endif
 }
 
 void gpio_pullups(int* gpios, int count)
 {
+#ifdef __arm__
     unsigned int clocks0 = 0;
     unsigned int clocks1 = 0;
     int i;
@@ -74,6 +85,7 @@ void gpio_pullups(int* gpios, int count)
     GPPUD = 0;
     GPPUDCLK0 = 0;
     GPPUDCLK1 = 0;
+#endif
 }
 
 void gpio_pullup(int gpio)
@@ -108,7 +120,7 @@ volatile void *map_memory(unsigned int base, unsigned int size)
 
 void gpio_init()
 {
-#ifdef LINUX
+#if defined(LINUX) && defined(__arm__)
     peripheral_base = map_memory(BUS_PERIPHERAL_BASE, PERIPHERAL_RANGE);
 #endif
 }
