@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "audio.h"
 
 typedef struct {
@@ -46,5 +45,68 @@ mod_handle_t envelope_create(float attack, float decay)
     data->attack = attack * FRAME_RATE;
     data->decay = decay * FRAME_RATE;
     data->samplePos = 0;
+    return handle;
+}
+
+typedef struct {
+    mod_handle_t in;
+    int triggered;
+    unsigned int time;
+    float leftSample;
+    float rightSample;
+} switchramp_data_t;
+
+void switchramp_fillblock(mod_handle_t handle, float* block, void* d)
+{
+    switchramp_data_t* data = (switchramp_data_t*) d;
+    float* in_block = mod_rdblock(data->in);
+    unsigned int time = data->time;
+
+    float leftRamp = 0;
+    float rightRamp = 0;
+    float leftDelta = 0;
+    float rightDelta = 0;
+    if (data->triggered) {
+        leftRamp = data->leftSample - in_block[0];
+        rightRamp = data->rightSample -  in_block[1];
+        leftDelta = leftRamp / data->time;
+        rightDelta = rightRamp / data->time;
+        data->triggered = 0;
+    }
+
+    int i;
+    for (i = 0; i < BLOCK_FRAMES; i++) {
+        float left = in_block[i * 2];
+        float right = in_block[i * 2 + 1];
+        if (i < time) {
+            left += leftRamp;
+            right += rightRamp;
+            leftRamp -= leftDelta;
+            rightRamp -= rightDelta;
+        }
+        block[i * 2] = left;
+        block[i * 2 + 1] = right;
+    }
+    data->leftSample = block[BLOCK_SIZE - 2];
+    data->rightSample = block[BLOCK_SIZE - 1];
+}
+
+void switchramp_ontrigger(mod_handle_t handle, void* d, float value)
+{
+    switchramp_data_t* data = (switchramp_data_t*) d;
+    data->triggered = 1;
+}
+
+mod_handle_t switchramp_create(mod_handle_t in, float time)
+{
+    mod_handle_t handle = mod_create(switchramp_fillblock, switchramp_ontrigger, sizeof(switchramp_data_t));
+
+    switchramp_data_t* data = mod_data(handle);
+    data->in = in;
+    data->triggered = 0;
+    data->time = time * FRAME_RATE;
+    data->leftSample = 0;
+    data->rightSample = 0;
+
     return handle;
 }

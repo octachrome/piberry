@@ -1,5 +1,5 @@
 #define FRAME_RATE 48000                // samples per second, per channel
-#define BLOCK_FRAMES 64                 // frames per block
+#define BLOCK_FRAMES 512                // frames per block
 #define BLOCK_SIZE (BLOCK_FRAMES * 2)   // in words
 
 void audio_init();
@@ -16,11 +16,19 @@ float* mod_rdblock(mod_handle_t handle);
 void mod_trigger(mod_handle_t handle, float value);
 void mod_newblock();
 
+// A fixed-frequency cosine generator
 mod_handle_t cos_create_fixed(float freq);
+// A variable-frequency cosine generator
 mod_handle_t cos_create_vco(mod_handle_t freq_in);
+// A simple linear attack/decay envelope generator. Attack and decay times are in seconds.
 mod_handle_t envelope_create(float attack, float decay);
+// Samples the audio stream, and when triggered, linearly blends from the last sample to the next block.
+mod_handle_t switchramp_create(mod_handle_t in, float time);
+// Multiplies two input streams.
 mod_handle_t multiply_create(mod_handle_t op1, mod_handle_t op2);
+// Calculates a * 2 ^ (b * input).
 mod_handle_t exp_create(mod_handle_t in, float a, float c);
+// Continually repeats the value from the last trigger.
 mod_handle_t value_create(float value);
 
 void gpio_init();

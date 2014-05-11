@@ -1,19 +1,26 @@
 all: clean run_tests
 
-run_tests: tests
-	./tests
+run_tests: pow2_tests switchramp_tests
+	./pow2_tests
+	./switchramp_tests
 
-tests: pow2_tests.o multiply.o module.o gtest/gtest.a
+pow2_tests: pow2_tests.o multiply.o module.o gtest/gtest.a
 	g++ -g -o $@ $^ -lpthread
 
-%_tests.o : %_tests.cc
+switchramp_tests: switchramp_tests.o envelope.o module_mock.o gtest/gtest.a
+	g++ -g -o $@ $^ -lpthread
+
+%.o : %.cc
 	g++ -c -o $@ -g -Wall -Werror -I$(GTEST_DIR)/include $^
+
+%.o : %.c
+	gcc -c -o $@ -g -Wall -Werror -I$(GTEST_DIR)/include $^
 
 %.o : ../%.c
 	gcc -c -o $@ -g -Wall -Werror $^
 
 clean:
-	-rm *.o tests
+	-rm *.o pow2_tests switchramp_tests
 
 GTEST_DIR = /home/chris/code/gtest-1.7.0
 

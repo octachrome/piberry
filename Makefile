@@ -23,11 +23,11 @@ kernel.elf : $(OBJS) rpi.ld
 	$(ARMGNU)-objcopy -O binary $< $@
 
 install : kernel.img
-	cp kernel.img /media/chris/C522-EA52/kernel.img
+	cp kernel.img /media/chris/3866-C336/kernel.img
 	sync
-	-eject /media/chris/C522-EA52
+	-eject /media/chris/3866-C336
 
-alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c
+alsa_test : raw_out.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c
 	cc -DLINUX -o $@ -g $^ -lasound
 
 run : alsa_test

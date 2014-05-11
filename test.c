@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include "audio.h"
 #include "pi.h"
 
@@ -36,18 +37,18 @@ void install_except_handler(int index, void* handler) {
 mod_handle_t env;
 mod_handle_t cosine;
 mod_handle_t keyval;
+mod_handle_t sr;
 
 void onevent(int event_type, int key)
 {
-    if (event_type == KEY_UP) {
-        printf("key up: %d\n", key);
-    } else {
-        printf("key down: %d\n", key);
-        mod_trigger(keyval, key);
+    if (event_type == KEY_DOWN) {
+        mod_trigger(keyval, key & 0xff);
         mod_trigger(env, 0);
         mod_trigger(cosine, 0);
+        mod_trigger(sr, 0);
     }
 }
+
 
 #ifdef LINUX
 void main()
@@ -71,15 +72,15 @@ void notmain()
     mod_handle_t expn = exp_create(keyval, 65, 1.0/12);
 
     cosine = cos_create_vco(expn);
-    mod_handle_t out = multiply_create(cosine, env);
+    mod_handle_t sig = multiply_create(cosine, env);
+    sr = switchramp_create(sig, 0.01);
 
     audio_init();
-
 
     while (1) {
         kbd_scan();
         mod_newblock();
-        float* block = mod_rdblock(out);
+        float* block = mod_rdblock(sr);
         audio_write(block);
     }
 
