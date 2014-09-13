@@ -30,7 +30,7 @@ install : kernel.img
 	sync
 	-eject /media/chris/3866-C336
 
-alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c patches/simple.c patches/kick.c
+alsa_test : alsa.c test.c module.c sine.c envelope.c multiply.c kbd.c gpio.c patches/simple.c patches/kick.c patches/fm.c
 	cc -DLINUX -o $@ -g $^ -lasound
 
 run : alsa_test

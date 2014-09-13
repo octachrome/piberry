@@ -58,16 +58,16 @@ void notmain()
     gpio_init();
     kbd_init(banks, nbanks, inputs, ninputs, onevent);
 
-    patch = simple_create();
+    patch = fm_create();
 
     audio_init();
 
-    // int j = 0;
+    int j = 0;
     while (1) {
-        // if (j++ % BLOCKS_IN_HALF_SEC == 0) {
-        //     mod_trigger(patch, 20);
-        // }
-        kbd_scan();
+        if (j++ % BLOCKS_IN_HALF_SEC == 0) {
+            mod_trigger(patch, 20 + j / BLOCKS_IN_HALF_SEC);
+        }
+        // kbd_scan();
         mod_newblock();
         float* block = mod_rdblock(patch);
         audio_write(block);
