@@ -23,6 +23,8 @@ mod_handle_t cos_create_fixed(float freq);
 mod_handle_t cos_create_vco(mod_handle_t freq_in);
 // A simple linear attack/decay envelope generator. Attack and decay times are in seconds.
 mod_handle_t envelope_create(float attack, float decay);
+// A noise function.
+mod_handle_t noise_create();
 // Samples the audio stream, and when triggered, linearly blends from the last sample to the next block.
 mod_handle_t switchramp_create(mod_handle_t in, float time);
 // Adds two input streams.
