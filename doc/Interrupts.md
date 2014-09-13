@@ -113,9 +113,9 @@ IRQs, GPIO ranges, clearing interrupt flags.
 A co-incidence
 --------------
 
-While I was experimenting with this, something strange was happening. I could install a mostly-working IRQ handler by writing it at address 0x38 (it crashed occasionally), but without setting up the `ldr`s which make up the interrupt vectors. My program image was being loaded at 0x8000, and I was not writing anything at all to addresses 0-0x20.
+While I was experimenting with this, something strange was happening. I could install a mostly-working IRQ handler by writing it at address 0x38 (it crashed occasionally), but without setting up the `ldr`s which make up the interrupt vectors. My program image was being loaded at 0x8000, and I was not writing anything at all to addresses 0-0x20 except for the address of the handler routine.
 
-I realised that the bootloader populates the area from address 0 with the contents of a file called first32k.bin. It's disassembly starts like this:
+I eventually realised that the bootloader populates the area from address 0 with the contents of a file called first32k.bin. It's disassembly starts like this:
 
            0:   ea000006    b   0x20
            4:   e1a00000    nop         ; (mov r0, r0)
@@ -133,4 +133,4 @@ I realised that the bootloader populates the area from address 0 with the conten
           34:   00000100    andeq   r0, r0, r0, lsl #2
           38:   00008000    andeq   r8, r0, r0
 
-The instruction at address 0x30 loads the program counter with 0x8000, to jump to the start of the program image. But it gets address 0x8000 from the memory location at 0x38 - exactly where I was installing my interrupt handler. The interrupt vectors themselves are nops, so the code would just run down and set pc to my interrupt handler; what a co-incidence. The handler crashed sometimes because the code between the nops and the jump trashes r0, r1 and r2, but not as often as I would have expected.
+The instruction at address 0x30 loads the program counter with 0x8000, to jump to the start of the program image. But it gets address 0x8000 from the memory location at 0x38 - exactly where I was installing my interrupt handler. The interrupt vectors themselves are nops, so when an IRQ occurred the code would just run down and set pc to my interrupt handler; what a co-incidence. The handler crashed sometimes because the code between the nops and the jump trashes r0, r1 and r2, but somehow this only caused problems occasionally.
