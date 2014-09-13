@@ -3,7 +3,7 @@
 #include "audio.h"
 #include "pi.h"
 
-#define BLOCKS_IN_HALF_SEC (FRAME_RATE / BLOCK_FRAMES / 2)
+#define BLOCKS_PER_SEC (FRAME_RATE / BLOCK_FRAMES)
 
 volatile char trigger = 0;
 
@@ -58,18 +58,26 @@ void notmain()
     gpio_init();
     kbd_init(banks, nbanks, inputs, ninputs, onevent);
 
+    mod_handle_t kick = kick_create();
+    mod_handle_t snare = snare_create();
+    mod_handle_t mixed = add_create(kick, snare);
+
     patch = fm_create();
 
     audio_init();
 
     int j = 0;
     while (1) {
-        if (j++ % BLOCKS_IN_HALF_SEC == 0) {
-            mod_trigger(patch, 20 + j / BLOCKS_IN_HALF_SEC);
+        if (j % BLOCKS_PER_SEC == 0) {
+            mod_trigger(patch, 20 + j / BLOCKS_PER_SEC);
+            mod_trigger(snare, 0);
+        } else if (j % BLOCKS_PER_SEC == (BLOCKS_PER_SEC/2)) {
+            mod_trigger(kick, 0);
         }
+        j++;
         // kbd_scan();
         mod_newblock();
-        float* block = mod_rdblock(patch);
+        float* block = mod_rdblock(mixed);
         audio_write(block);
     }
 
