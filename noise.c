@@ -2,7 +2,6 @@
 
 #define RANDOM_PRIME            18223
 #define PRIME_NEAR_MAX_INT      2147483647
-#define PRIME_NEAR_MAX_SHORT    32749
 
 typedef struct {
     int val;
@@ -12,9 +11,15 @@ static void noise_fillblock(mod_handle_t handle, float* block, void* d)
 {
     noise_data_t* data = d;
     int val = data->val;
+    union {
+        int i;
+        float f;
+    } u;
     int i;
     for (i = 0; i < BLOCK_SIZE; i += 2) {
-        block[i] = block[i+1] = (float) (val % PRIME_NEAR_MAX_SHORT) / PRIME_NEAR_MAX_SHORT;
+        // Mask out the exponent, leaving the fraction and the sign, and add a biased exponent of -1. This gives a number between -1 and 1.
+        u.i = (val & 0x807fffff) | ((-1 + 127) << 23);
+        block[i] = block[i+1] = u.f;
         val = val * RANDOM_PRIME % PRIME_NEAR_MAX_INT;
     }
     data->val = val;
